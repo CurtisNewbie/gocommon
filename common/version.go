@@ -1,5 +1,5 @@
 package common
 
 const (
-	GOCOMMON_VERSION = "v1.1.0-SNAPSHOT"
+	GOCOMMON_VERSION = "v1.1.0"
 )
