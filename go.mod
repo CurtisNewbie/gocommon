@@ -3,7 +3,7 @@ module github.com/curtisnewbie/gocommon
 go 1.18
 
 require (
-	github.com/curtisnewbie/miso v0.0.0-20230827133614-fb68aef9c5a2
+	github.com/curtisnewbie/miso v0.0.0-20230829064304-3e203fa27ab9
 	github.com/sirupsen/logrus v1.9.0
 )
 
