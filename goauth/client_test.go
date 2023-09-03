@@ -1,8 +1,9 @@
 package goauth
 
 import (
-	"context"
 	"testing"
+
+	"github.com/curtisnewbie/miso/core"
 )
 
 func TestTestResourceAccess(t *testing.T) {
@@ -11,7 +12,7 @@ func TestTestResourceAccess(t *testing.T) {
 		RoleNo: "role_554107924873216177918",
 	}
 
-	r, e := TestResourceAccess(context.Background(), req)
+	r, e := TestResourceAccess(core.EmptyRail(), req)
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -30,7 +31,7 @@ func TestAddResource(t *testing.T) {
 		Name: "goauth-client-go-test-resource",
 	}
 
-	e := AddResource(context.Background(), req)
+	e := AddResource(core.EmptyRail(), req)
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -45,7 +46,7 @@ func TestAddPath(t *testing.T) {
 		Method: "POST",
 	}
 
-	e := AddPath(context.Background(), req)
+	e := AddPath(core.EmptyRail(), req)
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -56,7 +57,7 @@ func TestGetRoleInfo(t *testing.T) {
 		RoleNo: "role_554107924873216177918",
 	}
 
-	r, e := GetRoleInfo(context.Background(), req)
+	r, e := GetRoleInfo(core.EmptyRail(), req)
 	if e != nil {
 		t.Fatal(e)
 	}
