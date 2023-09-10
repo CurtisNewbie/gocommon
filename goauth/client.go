@@ -1,7 +1,6 @@
 package goauth
 
 import (
-	"context"
 	"errors"
 	"strings"
 
@@ -75,9 +74,8 @@ type AddResourceReq struct {
 }
 
 // Test whether this role has access to the url
-func TestResourceAccess(ctx context.Context, req TestResAccessReq) (*TestResAccessResp, error) {
-	c := miso.EmptyRail()
-	tr := miso.NewDynTClient(c, "/remote/path/resource/access-test", "goauth").
+func TestResourceAccess(rail miso.Rail, req TestResAccessReq) (*TestResAccessResp, error) {
+	tr := miso.NewDynTClient(rail, "/remote/path/resource/access-test", "goauth").
 		EnableTracing().
 		PostJson(req)
 
@@ -106,9 +104,8 @@ func TestResourceAccess(ctx context.Context, req TestResAccessReq) (*TestResAcce
 }
 
 // Create resource
-func AddResource(ctx context.Context, req AddResourceReq) error {
-	c := miso.EmptyRail()
-	tr := miso.NewDynTClient(c, "/remote/resource/add", "goauth").
+func AddResource(rail miso.Rail, req AddResourceReq) error {
+	tr := miso.NewDynTClient(rail, "/remote/resource/add", "goauth").
 		EnableTracing().
 		PostJson(req)
 
@@ -134,9 +131,8 @@ func AddResource(ctx context.Context, req AddResourceReq) error {
 }
 
 // Report path
-func AddPath(ctx context.Context, req CreatePathReq) error {
-	c := miso.EmptyRail()
-	tr := miso.NewDynTClient(c, "/remote/path/add", "goauth").
+func AddPath(rail miso.Rail, req CreatePathReq) error {
+	tr := miso.NewDynTClient(rail, "/remote/path/add", "goauth").
 		EnableTracing().
 		PostJson(req)
 
@@ -161,9 +157,8 @@ func AddPath(ctx context.Context, req CreatePathReq) error {
 }
 
 // Retrieve role information
-func GetRoleInfo(ctx context.Context, req RoleInfoReq) (*RoleInfoResp, error) {
-	c := miso.EmptyRail()
-	tr := miso.NewDynTClient(c, "/remote/role/info", "goauth").
+func GetRoleInfo(rail miso.Rail, req RoleInfoReq) (*RoleInfoResp, error) {
+	tr := miso.NewDynTClient(rail, "/remote/role/info", "goauth").
 		EnableTracing().
 		PostJson(req)
 

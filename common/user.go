@@ -29,7 +29,7 @@ var (
 	}
 )
 
-func init() {
+func LoadBuiltinPropagationKeys() {
 	// load builtin propagation keys, so all dependents get the same behaviour
 	for _, v := range builtinPropagationKeys {
 		miso.AddPropagationKey(v)
