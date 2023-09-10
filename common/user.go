@@ -1,7 +1,7 @@
 package common
 
 import (
-	"github.com/curtisnewbie/miso/core"
+	"github.com/curtisnewbie/miso/miso"
 )
 
 type User struct {
@@ -32,7 +32,7 @@ var (
 func init() {
 	// load builtin propagation keys, so all dependents get the same behaviour
 	for _, v := range builtinPropagationKeys {
-		core.AddPropagationKey(v)
+		miso.AddPropagationKey(v)
 	}
 }
 
@@ -42,7 +42,7 @@ func NilUser() User {
 }
 
 // Get User from Rail (trace)
-func GetUser(rail core.Rail) User {
+func GetUser(rail miso.Rail) User {
 	idv := rail.CtxValInt(UserIdTraceKey)
 	if idv <= 0 {
 		return NilUser()

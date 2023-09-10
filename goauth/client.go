@@ -5,21 +5,18 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/curtisnewbie/miso/bus"
-	"github.com/curtisnewbie/miso/client"
-	"github.com/curtisnewbie/miso/core"
-	"github.com/curtisnewbie/miso/server"
+	"github.com/curtisnewbie/miso/miso"
 	"github.com/sirupsen/logrus"
 )
 
 const (
-	// Extra Key (Left in core.StrPair) used when registering HTTP routes using methods like server.GET
+	// Extra Key (Left in miso.StrPair) used when registering HTTP routes using methods like miso.GET
 	EXTRA_PATH_DOC = "PATH_DOC"
 
 	// Property Key for enabling GoAuth Client, by default it's true
 	//
 	// goauth-client-go doesn't use it internally, it's only useful for the Callers
-	PROP_ENABLE_GOAUTH_CLIENT = "goauth.client.enabled"
+	PROP_ENABLE_GOAUTH_CLIENT = "goauth.miso.enabled"
 
 	// event bus name for adding paths
 	addPathEventBus = "goauth.add-path"
@@ -29,7 +26,7 @@ const (
 )
 
 func init() {
-	core.SetDefProp(PROP_ENABLE_GOAUTH_CLIENT, true)
+	miso.SetDefProp(PROP_ENABLE_GOAUTH_CLIENT, true)
 }
 
 type PathType string
@@ -79,8 +76,8 @@ type AddResourceReq struct {
 
 // Test whether this role has access to the url
 func TestResourceAccess(ctx context.Context, req TestResAccessReq) (*TestResAccessResp, error) {
-	c := core.EmptyRail()
-	tr := client.NewDynTClient(c, "/remote/path/resource/access-test", "goauth").
+	c := miso.EmptyRail()
+	tr := miso.NewDynTClient(c, "/remote/path/resource/access-test", "goauth").
 		EnableTracing().
 		PostJson(req)
 
@@ -92,7 +89,7 @@ func TestResourceAccess(ctx context.Context, req TestResAccessReq) (*TestResAcce
 		return nil, err
 	}
 
-	r, e := client.ReadGnResp[*TestResAccessResp](tr)
+	r, e := miso.ReadGnResp[*TestResAccessResp](tr)
 	if e != nil {
 		return nil, e
 	}
@@ -110,8 +107,8 @@ func TestResourceAccess(ctx context.Context, req TestResAccessReq) (*TestResAcce
 
 // Create resource
 func AddResource(ctx context.Context, req AddResourceReq) error {
-	c := core.EmptyRail()
-	tr := client.NewDynTClient(c, "/remote/resource/add", "goauth").
+	c := miso.EmptyRail()
+	tr := miso.NewDynTClient(c, "/remote/resource/add", "goauth").
 		EnableTracing().
 		PostJson(req)
 
@@ -123,7 +120,7 @@ func AddResource(ctx context.Context, req AddResourceReq) error {
 		return err
 	}
 
-	r, e := client.ReadGnResp[any](tr)
+	r, e := miso.ReadGnResp[any](tr)
 	if e != nil {
 		return e
 	}
@@ -138,8 +135,8 @@ func AddResource(ctx context.Context, req AddResourceReq) error {
 
 // Report path
 func AddPath(ctx context.Context, req CreatePathReq) error {
-	c := core.EmptyRail()
-	tr := client.NewDynTClient(c, "/remote/path/add", "goauth").
+	c := miso.EmptyRail()
+	tr := miso.NewDynTClient(c, "/remote/path/add", "goauth").
 		EnableTracing().
 		PostJson(req)
 
@@ -151,7 +148,7 @@ func AddPath(ctx context.Context, req CreatePathReq) error {
 		return err
 	}
 
-	r, e := client.ReadGnResp[any](tr)
+	r, e := miso.ReadGnResp[any](tr)
 	if e != nil {
 		return e
 	}
@@ -165,8 +162,8 @@ func AddPath(ctx context.Context, req CreatePathReq) error {
 
 // Retrieve role information
 func GetRoleInfo(ctx context.Context, req RoleInfoReq) (*RoleInfoResp, error) {
-	c := core.EmptyRail()
-	tr := client.NewDynTClient(c, "/remote/role/info", "goauth").
+	c := miso.EmptyRail()
+	tr := miso.NewDynTClient(c, "/remote/role/info", "goauth").
 		EnableTracing().
 		PostJson(req)
 
@@ -178,7 +175,7 @@ func GetRoleInfo(ctx context.Context, req RoleInfoReq) (*RoleInfoResp, error) {
 		return nil, err
 	}
 
-	r, e := client.ReadGnResp[*RoleInfoResp](tr)
+	r, e := miso.ReadGnResp[*RoleInfoResp](tr)
 	if e != nil {
 		return nil, e
 	}
@@ -196,37 +193,37 @@ func GetRoleInfo(ctx context.Context, req RoleInfoReq) (*RoleInfoResp, error) {
 
 // Check whether goauth client is enabled
 //
-//	"goauth.client.enabled"
+//	"goauth.miso.enabled"
 func IsEnabled() bool {
-	return core.GetPropBool(PROP_ENABLE_GOAUTH_CLIENT)
+	return miso.GetPropBool(PROP_ENABLE_GOAUTH_CLIENT)
 }
 
-func PathDocExtra(doc PathDoc) core.StrPair {
-	return core.StrPair{Left: EXTRA_PATH_DOC, Right: doc}
+func PathDocExtra(doc PathDoc) miso.StrPair {
+	return miso.StrPair{Left: EXTRA_PATH_DOC, Right: doc}
 }
 
 // Register a hook to report paths to GoAuth on server bootstrapped
 //
-// When using methods like server.Get(...), the extra field should contains a
-// core.StrPair where the key is EXTRA_PATH_DOC, so that the PathDoc can be picked
+// When using methods like miso.Get(...), the extra field should contains a
+// miso.StrPair where the key is EXTRA_PATH_DOC, so that the PathDoc can be picked
 // and reported to GoAuth
 //
 // For example:
 //
-//	server.Get(url, handler, gclient.PathDocExtra(pathDoc))
+//	miso.Get(url, handler, gmiso.PathDocExtra(pathDoc))
 //
 // This method checks if the goauth client is enabled, nothing will happen if the client is disabled.
-func ReportPathsOnBootstrapped(rail core.Rail) {
+func ReportPathsOnBootstrapped(rail miso.Rail) {
 	if !IsEnabled() {
 		rail.Debug("GoAuth client disabled, will not report paths")
 		return
 	}
 
-	bus.DeclareEventBus(addPathEventBus)
+	miso.NewEventBus(addPathEventBus)
 
-	server.PostServerBootstrapped(func(rail core.Rail) error {
-		app := core.GetPropStr(core.PROP_APP_NAME)
-		routes := server.GetHttpRoutes()
+	miso.PostServerBootstrapped(func(rail miso.Rail) error {
+		app := miso.GetPropStr(miso.PROP_APP_NAME)
+		routes := miso.GetHttpRoutes()
 
 		for _, r := range routes {
 
@@ -261,7 +258,7 @@ func ReportPathsOnBootstrapped(rail core.Rail) {
 			}
 
 			// if e := AddPath(context.Background(), r); e != nil {
-			// 	return core.TraceErrf(e, "failed to report path to goauth")
+			// 	return miso.TraceErrf(e, "failed to report path to goauth")
 			// }
 
 			// report the path asynchronously
@@ -276,27 +273,27 @@ func ReportPathsOnBootstrapped(rail core.Rail) {
 }
 
 // Report path asynchronously
-func AddPathAsync(rail core.Rail, req CreatePathReq) error {
-	return bus.SendToEventBus(rail, req, addPathEventBus)
+func AddPathAsync(rail miso.Rail, req CreatePathReq) error {
+	return miso.PubEventBus(rail, req, addPathEventBus)
 }
 
 // Report resource asynchronously
-func AddResourceAsync(rail core.Rail, req AddResourceReq) error {
-	return bus.SendToEventBus(rail, req, addResourceEventBus)
+func AddResourceAsync(rail miso.Rail, req AddResourceReq) error {
+	return miso.PubEventBus(rail, req, addResourceEventBus)
 }
 
 // Register a hook to report resources to GoAuth on server bootstrapped
 //
 // This method checks if the goauth client is enabled, nothing will happen if the client is disabled.
-func ReportResourcesOnBootstrapped(rail core.Rail, reqs []AddResourceReq) {
+func ReportResourcesOnBootstrapped(rail miso.Rail, reqs []AddResourceReq) {
 	if !IsEnabled() {
 		rail.Debug("GoAuth client disabled, will not report resources")
 		return
 	}
 
-	bus.DeclareEventBus(addResourceEventBus)
+	miso.NewEventBus(addResourceEventBus)
 
-	server.PostServerBootstrapped(func(rail core.Rail) error {
+	miso.PostServerBootstrapped(func(rail miso.Rail) error {
 		for _, req := range reqs {
 			if e := AddResourceAsync(rail, req); e != nil {
 				rail.Errorf("Failed to report resource, %v", e)

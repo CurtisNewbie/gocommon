@@ -3,7 +3,7 @@ module github.com/curtisnewbie/gocommon
 go 1.18
 
 require (
-	github.com/curtisnewbie/miso v0.0.0-20230829064304-3e203fa27ab9
+	github.com/curtisnewbie/miso v0.0.0-20230910091343-1e3bcd05e0fd
 	github.com/sirupsen/logrus v1.9.0
 )
 
@@ -23,6 +23,7 @@ require (
 	github.com/go-redis/redis v6.15.9+incompatible // indirect
 	github.com/go-sql-driver/mysql v1.6.0 // indirect
 	github.com/goccy/go-json v0.9.7 // indirect
+	github.com/golang-jwt/jwt/v5 v5.0.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/hashicorp/consul/api v1.15.3 // indirect
@@ -40,6 +41,7 @@ require (
 	github.com/magiconair/properties v1.8.6 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
+	github.com/mattn/go-sqlite3 v1.14.9 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
@@ -73,5 +75,6 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gorm.io/driver/mysql v1.3.6 // indirect
+	gorm.io/driver/sqlite v1.2.6 // indirect
 	gorm.io/gorm v1.23.8 // indirect
 )
