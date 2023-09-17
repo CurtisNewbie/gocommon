@@ -217,7 +217,7 @@ func ReportPathsOnBootstrapped(rail miso.Rail) {
 	miso.NewEventBus(addPathEventBus)
 
 	miso.PostServerBootstrapped(func(rail miso.Rail) error {
-		app := miso.GetPropStr(miso.PROP_APP_NAME)
+		app := miso.GetPropStr(miso.PropAppName)
 		routes := miso.GetHttpRoutes()
 
 		for _, r := range routes {
