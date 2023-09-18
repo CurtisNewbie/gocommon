@@ -197,6 +197,14 @@ func PathDocExtra(doc PathDoc) miso.StrPair {
 	return miso.StrPair{Left: EXTRA_PATH_DOC, Right: doc}
 }
 
+func Public(desc string) miso.StrPair {
+	return PathDocExtra(PathDoc{Type: PT_PUBLIC, Desc: desc})
+}
+
+func Protected(desc string, code string) miso.StrPair {
+	return PathDocExtra(PathDoc{Type: PT_PROTECTED, Desc: desc, Code: code})
+}
+
 // Register a hook to report paths to GoAuth on server bootstrapped
 //
 // When using methods like miso.Get(...), the extra field should contains a
