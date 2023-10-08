@@ -15,7 +15,7 @@ const (
 	// Property Key for enabling GoAuth Client, by default it's true
 	//
 	// goauth-client-go doesn't use it internally, it's only useful for the Callers
-	PROP_ENABLE_GOAUTH_CLIENT = "goauth.miso.enabled"
+	PROP_ENABLE_GOAUTH_CLIENT = "goauth.client.enabled"
 
 	// event bus name for adding paths
 	addPathEventBus = "goauth.add-path"
@@ -260,16 +260,10 @@ func ReportPathsOnBootstrapped(rail miso.Rail) {
 				ResCode: doc.Code,
 			}
 
-			// if e := AddPath(context.Background(), r); e != nil {
-			// 	return miso.TraceErrf(e, "failed to report path to goauth")
-			// }
-
 			// report the path asynchronously
 			if err := AddPathAsync(rail, r); err != nil {
 				return err
 			}
-
-			// rail.Debugf("Reported Path: %-6s %-50s Type: %-10s ResCode: %s Desc: %s", r.Method, r.Url, r.Type, r.ResCode, r.Desc)
 		}
 		return nil
 	})
