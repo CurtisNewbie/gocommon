@@ -29,6 +29,10 @@ var (
 	}
 )
 
+func init() {
+	LoadBuiltinPropagationKeys()
+}
+
 func LoadBuiltinPropagationKeys() {
 	// load builtin propagation keys, so all dependents get the same behaviour
 	for _, v := range builtinPropagationKeys {
