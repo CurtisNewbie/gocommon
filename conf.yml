@@ -19,10 +19,6 @@ redis:
   password:
   database: 0
 
-# task:
-#   scheduling:
-#     enabled: false
-
 server:
   enabled: false
   host: localhost
@@ -60,3 +56,21 @@ tracing.propagation.keys:
   - username
   - role
   - services
+
+goauth:
+  resource: 
+    - name: "Manage File" 
+      code: "manage-file"
+    - name: "Manage Folder" 
+      code: "manage-folder"
+  path: 
+    - url: "/file"
+      method: "PUT"
+      type: "PROTECTED"
+      desc: "Upload file"
+      code: "manage-file"
+    - url: "/file"
+      method: "GET"
+      type: "PUBLIC"
+      desc: "Download file"
+      code: "manage-file"

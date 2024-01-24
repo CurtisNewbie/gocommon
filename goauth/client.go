@@ -32,13 +32,13 @@ type PathType string
 
 type PathDoc struct {
 	Desc string
-	Type PathType
+	Type string
 	Code string
 }
 
 const (
-	PT_PROTECTED PathType = "PROTECTED"
-	PT_PUBLIC    PathType = "PUBLIC"
+	PT_PROTECTED string = "PROTECTED"
+	PT_PUBLIC    string = "PUBLIC"
 )
 
 type RoleInfoReq struct {
@@ -51,12 +51,12 @@ type RoleInfoResp struct {
 }
 
 type CreatePathReq struct {
-	Type    PathType `json:"type"`
-	Url     string   `json:"url"`
-	Group   string   `json:"group"`
-	Desc    string   `json:"desc"`
-	ResCode string   `json:"resCode"`
-	Method  string   `json:"method"`
+	Type    string `json:"type"`
+	Url     string `json:"url"`
+	Group   string `json:"group"`
+	Desc    string `json:"desc"`
+	ResCode string `json:"resCode"`
+	Method  string `json:"method"`
 }
 
 type TestResAccessReq struct {
@@ -205,70 +205,6 @@ func Protected(desc string, code string) miso.StrPair {
 	return PathDocExtra(PathDoc{Type: PT_PROTECTED, Desc: desc, Code: code})
 }
 
-// Register a hook to report paths to GoAuth on server bootstrapped
-//
-// When using methods like miso.Get(...), the extra field should contains a
-// miso.StrPair where the key is EXTRA_PATH_DOC, so that the PathDoc can be picked
-// and reported to GoAuth
-//
-// For example:
-//
-//	miso.Get(url, handler, gmiso.PathDocExtra(pathDoc))
-//
-// This method checks if the goauth client is enabled, nothing will happen if the client is disabled.
-func ReportPathsOnBootstrapped(rail miso.Rail) {
-	if !IsEnabled() {
-		rail.Debug("GoAuth client disabled, will not report paths")
-		return
-	}
-
-	miso.NewEventBus(addPathEventBus)
-
-	miso.PostServerBootstrapped(func(rail miso.Rail) error {
-		app := miso.GetPropStr(miso.PropAppName)
-		routes := miso.GetHttpRoutes()
-
-		for _, r := range routes {
-
-			v, ok := r.Extra[EXTRA_PATH_DOC]
-			if !ok {
-				continue
-			}
-
-			doc, ok := v.(PathDoc)
-			if !ok {
-				continue
-			}
-
-			url := r.Url
-			method := r.Method
-
-			if !strings.HasPrefix(url, "/") {
-				url = "/" + url
-			}
-
-			if doc.Type == "" {
-				doc.Type = PT_PROTECTED
-			}
-
-			r := CreatePathReq{
-				Method:  method,
-				Group:   app,
-				Url:     app + url,
-				Type:    doc.Type,
-				Desc:    doc.Desc,
-				ResCode: doc.Code,
-			}
-
-			// report the path asynchronously
-			if err := AddPathAsync(rail, r); err != nil {
-				return err
-			}
-		}
-		return nil
-	})
-}
-
 // Report path asynchronously
 func AddPathAsync(rail miso.Rail, req CreatePathReq) error {
 	return miso.PubEventBus(rail, req, addPathEventBus)
@@ -279,22 +215,60 @@ func AddResourceAsync(rail miso.Rail, req AddResourceReq) error {
 	return miso.PubEventBus(rail, req, addResourceEventBus)
 }
 
-// Register a hook to report resources to GoAuth on server bootstrapped
+// Register a hook to report paths and resources to GoAuth on server bootstrapped
 //
 // This method checks if the goauth client is enabled, nothing will happen if the client is disabled.
-func ReportResourcesOnBootstrapped(rail miso.Rail, reqs []AddResourceReq) {
+func ReportOnBoostrapped(rail miso.Rail) {
 	if !IsEnabled() {
 		rail.Debug("GoAuth client disabled, will not report resources")
 		return
 	}
 
 	miso.NewEventBus(addResourceEventBus)
+	miso.NewEventBus(addPathEventBus)
 
 	miso.PostServerBootstrapped(func(rail miso.Rail) error {
-		for _, req := range reqs {
-			if e := AddResourceAsync(rail, req); e != nil {
+		var config GoAuthConfig
+		miso.UnmarshalFromProp(&config)
+
+		rail.Debugf("Loaded goauth resources: %+v", config)
+		for _, res := range config.Resource {
+			if res.Code == "" || res.Name == "" {
+				continue
+			}
+			// report resource synchronously
+			if e := AddResource(rail, AddResourceReq(res)); e != nil {
 				rail.Errorf("Failed to report resource, %v", e)
 				return e
+			}
+		}
+
+		app := miso.GetPropStr(miso.PropAppName)
+		for _, r := range config.Path {
+			if r.Url == "" || r.Method == "" {
+				continue
+			}
+
+			if r.Type != PT_PUBLIC {
+				r.Type = PT_PROTECTED
+			}
+
+			url := r.Url
+			if !strings.HasPrefix(url, "/") {
+				url = "/" + url
+			}
+			r := CreatePathReq{
+				Method:  r.Method,
+				Group:   app,
+				Url:     app + url,
+				Type:    r.Type,
+				Desc:    r.Desc,
+				ResCode: r.Code,
+			}
+
+			// report the path asynchronously
+			if err := AddPathAsync(rail, r); err != nil {
+				return err
 			}
 		}
 		return nil
