@@ -14,18 +14,24 @@ type GoAuthConfig struct {
 type Resource struct {
 	Name string
 	Code string
+	Path []Path `mapstructure:"path"`
 }
 
 type Path struct {
-	Url    string
-	Method string
-	Type   string
-	Desc   string
-	Code   string
+	Url  string
+	Type string
+	Desc string
 }
 
 func LoadConfig() GoAuthConfig {
 	var loaded LoadedGoAuthConfig
 	miso.UnmarshalFromProp(&loaded)
+	for i, p := range loaded.Config.Path {
+		if p.Type == "" {
+			p.Type = "PROTECTED"
+			loaded.Config.Path[i] = p
+		}
+	}
+
 	return loaded.Config
 }

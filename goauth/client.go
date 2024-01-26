@@ -227,50 +227,78 @@ func ReportOnBoostrapped(rail miso.Rail) {
 	miso.NewEventBus(addResourceEventBus)
 	miso.NewEventBus(addPathEventBus)
 
-	miso.PostServerBootstrapped(func(rail miso.Rail) error {
-		config := LoadConfig()
+	app := miso.GetPropStr(miso.PropAppName)
+	doReportPath := func(rail miso.Rail, p Path, code string, urlToRoute map[string]miso.HttpRoute) error {
+		if p.Url == "" {
+			return nil
+		}
+		method := "GET"
+		if route, ok := urlToRoute[p.Url]; ok {
+			method = route.Method
+		}
 
-		rail.Debugf("Loaded goauth resources: %+v", config)
+		if p.Type != PT_PUBLIC && p.Type != PT_PROTECTED {
+			p.Type = PT_PROTECTED
+		}
+
+		url := p.Url
+		if !strings.HasPrefix(url, "/") {
+			url = "/" + url
+		}
+		r := CreatePathReq{
+			Method:  method,
+			Group:   app,
+			Url:     "/" + app + url,
+			Type:    p.Type,
+			Desc:    p.Desc,
+			ResCode: code,
+		}
+
+		// report the path asynchronously
+		if err := AddPathAsync(rail, r); err != nil {
+			return err
+		}
+		return nil
+	}
+
+	miso.PostServerBootstrapped(func(rail miso.Rail) error {
+		routes := miso.GetHttpRoutes()
+		urlToRoute := map[string]miso.HttpRoute{}
+		for i, r := range routes {
+			u := r.Url
+			if !strings.HasPrefix(u, "/") {
+				u = "/" + u
+			}
+			urlToRoute[u] = routes[i]
+		}
+
+		config := LoadConfig()
+		rail.Debugf("Loaded goauth resource/path config: %+v", config)
+
 		for _, res := range config.Resource {
 			if res.Code == "" || res.Name == "" {
 				continue
 			}
+
 			// report resource synchronously
-			if e := AddResource(rail, AddResourceReq(res)); e != nil {
-				rail.Errorf("Failed to report resource, %v", e)
+			if e := AddResource(rail, AddResourceReq{
+				Code: res.Code,
+				Name: res.Name,
+			}); e != nil {
 				return e
+			}
+
+			// report paths under the resource
+			for _, p := range res.Path {
+				if err := doReportPath(rail, p, res.Code, urlToRoute); err != nil {
+					return err
+				}
 			}
 		}
 
-		app := miso.GetPropStr(miso.PropAppName)
+		// report the remaining paths
 		for _, r := range config.Path {
-			if r.Url == "" {
-				continue
-			}
-
-			if r.Method == "" {
-				r.Method = "GET"
-			}
-
-			if r.Type != PT_PUBLIC {
-				r.Type = PT_PROTECTED
-			}
-
-			url := r.Url
-			if !strings.HasPrefix(url, "/") {
-				url = "/" + url
-			}
-			r := CreatePathReq{
-				Method:  r.Method,
-				Group:   app,
-				Url:     app + url,
-				Type:    r.Type,
-				Desc:    r.Desc,
-				ResCode: r.Code,
-			}
-
-			// report the path asynchronously
-			if err := AddPathAsync(rail, r); err != nil {
+			if err := doReportPath(rail, r, "", urlToRoute); err != nil {
 				return err
 			}
 		}

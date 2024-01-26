@@ -4,32 +4,22 @@ Common stuff for all my Go projects. Internally, it uses [miso](https://github.c
 
 ## Configuration
 
-Properties for enabling/disabling GoAuth Resource/Path Report:
-
-```yaml
-goauth.client.enabled: false
-
-goauth.client.enabled: true
-```
-
 GoAuth Resource/Path Report Configuration:
 
 ```yaml
 goauth:
-  resource: 
-    - name: "Manage File" 
-      code: "manage-file"
-    - name: "Manage Folder" 
-      code: "manage-folder"
-  path: 
-    - url: "/file"
-      method: "PUT"
-      type: "PROTECTED"
-      desc: "Upload file"
-      code: "manage-file"
-    - url: "/file"
-      method: "GET"
-      type: "PUBLIC"
-      desc: "Download file"
-      code: "manage-file"
+  client:
+    enabled: true
+  resource:
+    - name: "Manage files"
+      code: "manage-files"
+      path:
+        - url: "/open/api/file/upload/duplication/preflight"
+          desc: "Preflight check for duplicate file uploads"
+        - url: "/open/api/file/parent"
+          desc: "User fetch parent file info"
+        - url: "/open/api/file/move-to-dir"
+          desc: "Upload file"
+    - name: "Admin file service"
+      code: "admin-file-service"
 ```
