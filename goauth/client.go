@@ -244,8 +244,12 @@ func ReportOnBoostrapped(rail miso.Rail) {
 
 		app := miso.GetPropStr(miso.PropAppName)
 		for _, r := range config.Path {
-			if r.Url == "" || r.Method == "" {
+			if r.Url == "" {
 				continue
+			}
+
+			if r.Method == "" {
+				r.Method = "GET"
 			}
 
 			if r.Type != PT_PUBLIC {
