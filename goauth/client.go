@@ -228,8 +228,7 @@ func ReportOnBoostrapped(rail miso.Rail) {
 	miso.NewEventBus(addPathEventBus)
 
 	miso.PostServerBootstrapped(func(rail miso.Rail) error {
-		var config GoAuthConfig
-		miso.UnmarshalFromProp(&config)
+		config := LoadConfig()
 
 		rail.Debugf("Loaded goauth resources: %+v", config)
 		for _, res := range config.Resource {
