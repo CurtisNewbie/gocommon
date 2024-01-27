@@ -37,8 +37,8 @@ type PathDoc struct {
 }
 
 const (
-	PT_PROTECTED string = "PROTECTED"
-	PT_PUBLIC    string = "PUBLIC"
+	ScopeProtected string = "PROTECTED"
+	ScopePublic    string = "PUBLIC"
 )
 
 type RoleInfoReq struct {
@@ -198,11 +198,11 @@ func PathDocExtra(doc PathDoc) miso.StrPair {
 }
 
 func Public(desc string) miso.StrPair {
-	return PathDocExtra(PathDoc{Type: PT_PUBLIC, Desc: desc})
+	return PathDocExtra(PathDoc{Type: ScopePublic, Desc: desc})
 }
 
 func Protected(desc string, code string) miso.StrPair {
-	return PathDocExtra(PathDoc{Type: PT_PROTECTED, Desc: desc, Code: code})
+	return PathDocExtra(PathDoc{Type: ScopeProtected, Desc: desc, Code: code})
 }
 
 // Report path asynchronously
@@ -218,7 +218,7 @@ func AddResourceAsync(rail miso.Rail, req AddResourceReq) error {
 // Register a hook to report paths and resources to GoAuth on server bootstrapped
 //
 // This method checks if the goauth client is enabled, nothing will happen if the client is disabled.
-func ReportOnBoostrapped(rail miso.Rail) {
+func ReportOnBoostrapped(rail miso.Rail, res []AddResourceReq) {
 	if !IsEnabled() {
 		rail.Debug("GoAuth client disabled, will not report resources")
 		return
@@ -227,78 +227,46 @@ func ReportOnBoostrapped(rail miso.Rail) {
 	miso.NewEventBus(addResourceEventBus)
 	miso.NewEventBus(addPathEventBus)
 
-	app := miso.GetPropStr(miso.PropAppName)
-	doReportPath := func(rail miso.Rail, p Path, code string, urlToRoute map[string]miso.HttpRoute) error {
-		if p.Url == "" {
-			return nil
-		}
-		method := "GET"
-		if route, ok := urlToRoute[p.Url]; ok {
-			method = route.Method
-		}
-
-		if p.Type != PT_PUBLIC && p.Type != PT_PROTECTED {
-			p.Type = PT_PROTECTED
-		}
-
-		url := p.Url
-		if !strings.HasPrefix(url, "/") {
-			url = "/" + url
-		}
-		r := CreatePathReq{
-			Method:  method,
-			Group:   app,
-			Url:     "/" + app + url,
-			Type:    p.Type,
-			Desc:    p.Desc,
-			ResCode: code,
-		}
-
-		// report the path asynchronously
-		if err := AddPathAsync(rail, r); err != nil {
-			return err
-		}
-		return nil
-	}
-
 	miso.PostServerBootstrapped(func(rail miso.Rail) error {
-		routes := miso.GetHttpRoutes()
-		urlToRoute := map[string]miso.HttpRoute{}
-		for i, r := range routes {
-			u := r.Url
-			if !strings.HasPrefix(u, "/") {
-				u = "/" + u
-			}
-			urlToRoute[u] = routes[i]
-		}
 
-		config := LoadConfig()
-		rail.Debugf("Loaded goauth resource/path config: %+v", config)
-
-		for _, res := range config.Resource {
+		app := miso.GetPropStr(miso.PropAppName)
+		for _, res := range res {
 			if res.Code == "" || res.Name == "" {
 				continue
 			}
 
 			// report resource synchronously
-			if e := AddResource(rail, AddResourceReq{
-				Code: res.Code,
-				Name: res.Name,
-			}); e != nil {
+			if e := AddResource(rail, AddResourceReq(res)); e != nil {
 				return e
-			}
-
-			// report paths under the resource
-			for _, p := range res.Path {
-				if err := doReportPath(rail, p, res.Code, urlToRoute); err != nil {
-					return err
-				}
 			}
 		}
 
-		// report the remaining paths
-		for _, r := range config.Path {
-			if err := doReportPath(rail, r, "", urlToRoute); err != nil {
+		routes := miso.GetHttpRoutes()
+		for _, route := range routes {
+			if route.Url == "" {
+				continue
+			}
+			var routeType = ScopeProtected
+			if route.Scope == miso.ScopePublic {
+				routeType = ScopePublic
+			}
+
+			url := route.Url
+			if !strings.HasPrefix(url, "/") {
+				url = "/" + url
+			}
+
+			r := CreatePathReq{
+				Method:  route.Method,
+				Group:   app,
+				Url:     "/" + app + url,
+				Type:    routeType,
+				Desc:    route.Desc,
+				ResCode: route.Resource,
+			}
+
+			// report the path asynchronously
+			if err := AddPathAsync(rail, r); err != nil {
 				return err
 			}
 		}
