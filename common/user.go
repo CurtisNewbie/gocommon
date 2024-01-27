@@ -13,10 +13,10 @@ type User struct {
 }
 
 const (
-	UserIdTraceKey   = "id"
-	UserNoTraceKey   = "userno"
-	UsernameTraceKey = "username"
-	RoleNoTraceKey   = "roleno"
+	UserIdTraceKey   = "x-id"
+	UserNoTraceKey   = "x-userno"
+	UsernameTraceKey = "x-username"
+	RoleNoTraceKey   = "x-roleno"
 )
 
 var (
