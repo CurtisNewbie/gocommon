@@ -22,4 +22,7 @@ goauth:
           desc: "Upload file"
     - name: "Admin file service"
       code: "admin-file-service"
+  path:
+    - url: "/open/api/file/info"
+      desc: "Fetch file info"
 ```
