@@ -9,37 +9,30 @@ import (
 )
 
 const (
-	// Extra Key (Left in miso.StrPair) used when registering HTTP routes using methods like miso.GET
-	EXTRA_PATH_DOC = "PATH_DOC"
-
 	// Property Key for enabling GoAuth Client, by default it's true
 	//
 	// goauth-client-go doesn't use it internally, it's only useful for the Callers
-	PROP_ENABLE_GOAUTH_CLIENT = "goauth.client.enabled"
+	PropGoAuthClientEnabled = "goauth.client.enabled"
 
 	// event bus name for adding paths
 	addPathEventBus = "goauth.add-path"
 
 	// event bus name for adding resources
 	addResourceEventBus = "goauth.add-resource"
+
+	ScopeProtected string = "PROTECTED"
+	ScopePublic    string = "PUBLIC"
 )
 
 func init() {
-	miso.SetDefProp(PROP_ENABLE_GOAUTH_CLIENT, true)
+	miso.SetDefProp(PropGoAuthClientEnabled, true)
 }
-
-type PathType string
 
 type PathDoc struct {
 	Desc string
 	Type string
 	Code string
 }
-
-const (
-	ScopeProtected string = "PROTECTED"
-	ScopePublic    string = "PUBLIC"
-)
 
 type RoleInfoReq struct {
 	RoleNo string `json:"roleNo" `
@@ -190,19 +183,7 @@ func GetRoleInfo(rail miso.Rail, req RoleInfoReq) (*RoleInfoResp, error) {
 //
 //	"goauth.miso.enabled"
 func IsEnabled() bool {
-	return miso.GetPropBool(PROP_ENABLE_GOAUTH_CLIENT)
-}
-
-func PathDocExtra(doc PathDoc) miso.StrPair {
-	return miso.StrPair{Left: EXTRA_PATH_DOC, Right: doc}
-}
-
-func Public(desc string) miso.StrPair {
-	return PathDocExtra(PathDoc{Type: ScopePublic, Desc: desc})
-}
-
-func Protected(desc string, code string) miso.StrPair {
-	return PathDocExtra(PathDoc{Type: ScopeProtected, Desc: desc, Code: code})
+	return miso.GetPropBool(PropGoAuthClientEnabled)
 }
 
 // Report path asynchronously
