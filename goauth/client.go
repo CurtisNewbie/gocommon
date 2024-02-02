@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/curtisnewbie/miso/miso"
+	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 )
 
@@ -22,6 +23,11 @@ const (
 
 	ScopeProtected string = "PROTECTED"
 	ScopePublic    string = "PUBLIC"
+)
+
+var (
+	loadedResources = []AddResourceReq{}
+	loadedPaths     = []CreatePathReq{}
 )
 
 func init() {
@@ -196,6 +202,11 @@ func AddResourceAsync(rail miso.Rail, req AddResourceReq) error {
 	return miso.PubEventBus(rail, req, addResourceEventBus)
 }
 
+type QueryResourcePathReq struct {
+	Resources []AddResourceReq
+	Paths     []CreatePathReq
+}
+
 // Register a hook to report paths and resources to GoAuth on server bootstrapped
 //
 // This method checks if the goauth client is enabled, nothing will happen if the client is disabled.
@@ -208,6 +219,16 @@ func ReportOnBoostrapped(rail miso.Rail, res []AddResourceReq) {
 	miso.NewEventBus(addResourceEventBus)
 	miso.NewEventBus(addPathEventBus)
 
+	miso.PreServerBootstrap(func(rail miso.Rail) error {
+		miso.Get("/auth/resource", func(c *gin.Context, rail miso.Rail) (any, error) {
+			return QueryResourcePathReq{
+				Resources: loadedResources,
+				Paths:     loadedPaths,
+			}, nil
+		}).Build()
+		return nil
+	})
+
 	miso.PostServerBootstrapped(func(rail miso.Rail) error {
 
 		app := miso.GetPropStr(miso.PropAppName)
@@ -215,11 +236,12 @@ func ReportOnBoostrapped(rail miso.Rail, res []AddResourceReq) {
 			if res.Code == "" || res.Name == "" {
 				continue
 			}
+			loadedResources = append(loadedResources, AddResourceReq(res))
 
 			// report resource synchronously
-			if e := AddResource(rail, AddResourceReq(res)); e != nil {
-				return e
-			}
+			// if e := AddResource(rail, AddResourceReq(res)); e != nil {
+			// 	return e
+			// }
 		}
 
 		routes := miso.GetHttpRoutes()
@@ -246,10 +268,12 @@ func ReportOnBoostrapped(rail miso.Rail, res []AddResourceReq) {
 				ResCode: route.Resource,
 			}
 
+			loadedPaths = append(loadedPaths, r)
+
 			// report the path asynchronously
-			if err := AddPathAsync(rail, r); err != nil {
-				return err
-			}
+			// if err := AddPathAsync(rail, r); err != nil {
+			// 	return err
+			// }
 		}
 		return nil
 	})
