@@ -39,7 +39,7 @@ type QueryResourcePathReq struct {
 }
 
 // Create endpoint to expose resources and endpoint paths to be collected by goauth.
-func ReportOnBoostrapped(rail miso.Rail, resources []AddResourceReq) {
+func ReportOnBoostrapped(resources []AddResourceReq) {
 
 	miso.PreServerBootstrap(func(rail miso.Rail) error {
 
