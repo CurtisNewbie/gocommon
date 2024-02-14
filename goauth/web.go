@@ -87,7 +87,7 @@ func ReportOnBoostrapped(rail miso.Rail, resources []AddResourceReq) {
 				Resources: loadedResources,
 				Paths:     loadedPaths,
 			}, nil
-		}).Build()
+		})
 		return nil
 	})
 }
