@@ -1,4 +1,4 @@
-package uservault
+package auth
 
 import (
 	"strings"
