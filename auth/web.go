@@ -1,4 +1,4 @@
-package goauth
+package uservault
 
 import (
 	"strings"
@@ -15,11 +15,11 @@ const (
 
 var (
 	loadResourcePathOnce sync.Once
-	loadedResources      = []AddResourceReq{}
-	loadedPaths          = []CreatePathReq{}
+	loadedResources      = []Reosurce{}
+	loadedPaths          = []Endpoint{}
 )
 
-type CreatePathReq struct {
+type Endpoint struct {
 	Type    string `json:"type"`
 	Url     string `json:"url"`
 	Group   string `json:"group"`
@@ -28,22 +28,22 @@ type CreatePathReq struct {
 	Method  string `json:"method"`
 }
 
-type AddResourceReq struct {
+type Reosurce struct {
 	Name string `json:"name"`
 	Code string `json:"code"`
 }
 
-type QueryResourcePathReq struct {
-	Resources []AddResourceReq
-	Paths     []CreatePathReq
+type ResourceInfoRes struct {
+	Resources []Reosurce
+	Paths     []Endpoint
 }
 
-// Create endpoint to expose resources and endpoint paths to be collected by goauth.
-func ReportOnBoostrapped(resources []AddResourceReq) {
+// Create endpoint to expose resources and endpoint paths to be collected by user-vault.
+func ExposeUserVaultResources(resources []Reosurce) {
 
 	miso.PreServerBootstrap(func(rail miso.Rail) error {
 
-		// resources and paths are polled by goauth
+		// resources and paths are polled by uservault
 		miso.Get("/auth/resource", func(c *gin.Context, rail miso.Rail) (any, error) {
 
 			// resources and paths are lazily loaded
@@ -71,7 +71,7 @@ func ReportOnBoostrapped(resources []AddResourceReq) {
 						url = "/" + url
 					}
 
-					r := CreatePathReq{
+					r := Endpoint{
 						Method:  route.Method,
 						Group:   app,
 						Url:     "/" + app + url,
@@ -83,7 +83,7 @@ func ReportOnBoostrapped(resources []AddResourceReq) {
 				}
 			})
 
-			return QueryResourcePathReq{
+			return ResourceInfoRes{
 				Resources: loadedResources,
 				Paths:     loadedPaths,
 			}, nil
