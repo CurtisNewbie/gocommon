@@ -15,7 +15,7 @@ const (
 
 var (
 	loadResourcePathOnce sync.Once
-	loadedResources      = []Reosurce{}
+	loadedResources      = []Resource{}
 	loadedPaths          = []Endpoint{}
 )
 
@@ -28,18 +28,18 @@ type Endpoint struct {
 	Method  string `json:"method"`
 }
 
-type Reosurce struct {
+type Resource struct {
 	Name string `json:"name"`
 	Code string `json:"code"`
 }
 
 type ResourceInfoRes struct {
-	Resources []Reosurce
+	Resources []Resource
 	Paths     []Endpoint
 }
 
 // Create endpoint to expose resources and endpoint paths to be collected by user-vault.
-func ExposeUserVaultResources(resources []Reosurce) {
+func ExposeUserVaultResources(resources []Resource) {
 
 	miso.PreServerBootstrap(func(rail miso.Rail) error {
 
