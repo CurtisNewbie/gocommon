@@ -45,7 +45,7 @@ func ExposeResourceInfo(resources []Resource) {
 
 		// resources and paths are polled by uservault
 		miso.Get("/auth/resource", ServeResourceInfo(resources)).
-			Desc("Query resource and endpoint information").
+			Desc("Expose resource and endpoint information to other backend service for authorization.").
 			Protected()
 
 		return nil
