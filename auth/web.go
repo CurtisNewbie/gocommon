@@ -39,55 +39,62 @@ type ResourceInfoRes struct {
 }
 
 // Create endpoint to expose resources and endpoint paths to be collected by user-vault.
-func ExposeUserVaultResources(resources []Resource) {
+func ExposeResourceInfo(resources []Resource) {
 
 	miso.PreServerBootstrap(func(rail miso.Rail) error {
 
 		// resources and paths are polled by uservault
-		miso.Get("/auth/resource", func(c *gin.Context, rail miso.Rail) (any, error) {
+		miso.Get("/auth/resource", ServeResourceInfo(resources)).
+			Desc("Query resource and endpoint information").
+			Protected()
 
-			// resources and paths are lazily loaded
-			loadResourcePathOnce.Do(func() {
-				app := miso.GetPropStr(miso.PropAppName)
-				for _, res := range resources {
-					if res.Code == "" || res.Name == "" {
-						continue
-					}
-					loadedResources = append(loadedResources, res)
-				}
-
-				routes := miso.GetHttpRoutes()
-				for _, route := range routes {
-					if route.Url == "" {
-						continue
-					}
-					var routeType = ScopeProtected
-					if route.Scope == miso.ScopePublic {
-						routeType = ScopePublic
-					}
-
-					url := route.Url
-					if !strings.HasPrefix(url, "/") {
-						url = "/" + url
-					}
-
-					r := Endpoint{
-						Method:  route.Method,
-						Group:   app,
-						Url:     "/" + app + url,
-						Type:    routeType,
-						Desc:    route.Desc,
-						ResCode: route.Resource,
-					}
-					loadedPaths = append(loadedPaths, r)
-				}
-			})
-
-			return ResourceInfoRes{
-				Resources: loadedResources,
-				Paths:     loadedPaths,
-			}, nil
-		})
 		return nil
 	})
+}
+
+func ServeResourceInfo(resources []Resource) func(c *gin.Context, rail miso.Rail) (any, error) {
+	return func(c *gin.Context, rail miso.Rail) (any, error) {
+
+		// resources and paths are lazily loaded
+		loadResourcePathOnce.Do(func() {
+			app := miso.GetPropStr(miso.PropAppName)
+			for _, res := range resources {
+				if res.Code == "" || res.Name == "" {
+					continue
+				}
+				loadedResources = append(loadedResources, res)
+			}
+
+			routes := miso.GetHttpRoutes()
+			for _, route := range routes {
+				if route.Url == "" {
+					continue
+				}
+				var routeType = ScopeProtected
+				if route.Scope == miso.ScopePublic {
+					routeType = ScopePublic
+				}
+
+				url := route.Url
+				if !strings.HasPrefix(url, "/") {
+					url = "/" + url
+				}
+
+				r := Endpoint{
+					Method:  route.Method,
+					Group:   app,
+					Url:     "/" + app + url,
+					Type:    routeType,
+					Desc:    route.Desc,
+					ResCode: route.Resource,
+				}
+				loadedPaths = append(loadedPaths, r)
+			}
+		})
+
+		return ResourceInfoRes{
+			Resources: loadedResources,
+			Paths:     loadedPaths,
+		}, nil
+	}
 }
