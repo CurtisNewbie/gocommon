@@ -3,7 +3,7 @@ module github.com/curtisnewbie/gocommon
 go 1.18
 
 require (
-	github.com/curtisnewbie/miso v0.0.23-beta.1.0.20240214091207-75c518706b82
+	github.com/curtisnewbie/miso v0.0.23-beta.1.0.20240214161436-f8c0cfb9947f
 	github.com/gin-gonic/gin v1.8.1
 )
 
