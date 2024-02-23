@@ -5,7 +5,6 @@ import (
 	"sync"
 
 	"github.com/curtisnewbie/miso/miso"
-	"github.com/gin-gonic/gin"
 )
 
 const (
@@ -53,8 +52,8 @@ func ExposeResourceInfo(resources []Resource) {
 	})
 }
 
-func ServeResourceInfo(resources []Resource) func(c *gin.Context, rail miso.Rail) (any, error) {
-	return func(c *gin.Context, rail miso.Rail) (any, error) {
+func ServeResourceInfo(resources []Resource) func(inb *miso.Inbound) (any, error) {
+	return func(inb *miso.Inbound) (any, error) {
 
 		// resources and paths are lazily loaded
 		loadResourcePathOnce.Do(func() {
