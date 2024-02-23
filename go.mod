@@ -2,7 +2,7 @@ module github.com/curtisnewbie/gocommon
 
 go 1.18
 
-require github.com/curtisnewbie/miso v0.0.26-beta.3
+require github.com/curtisnewbie/miso v0.0.26
 
 require (
 	github.com/armon/go-metrics v0.4.0 // indirect
